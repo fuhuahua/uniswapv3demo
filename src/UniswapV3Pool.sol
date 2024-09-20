@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MIT 
 pragma solidity ^0.8.14;
+
 import './lib/Tick.sol';
 import './lib/Position.sol';
+import "./interfaces/IERC20.sol";
+import "./interfaces/IUniswapV3MintCallback.sol";
+import "./interfaces/IUniswapV3SwapCallback.sol";
 
 contract UniswapV3Pool{
     using Tick for mapping(int24 => Tick.Info);
@@ -11,6 +15,16 @@ contract UniswapV3Pool{
     error InsufficientInputAmount();
     error InvalidTickRange();
     error ZeroLiquidity();
+
+     event Mint(
+        address sender,
+        address indexed owner,
+        int24 indexed tickLower,
+        int24 indexed tickUpper,
+        uint128 amount,
+        uint256 amount0,
+        uint256 amount1
+    );
 
     int24 internal constant MIN_TICK = -887272;
     int24 internal constant MAX_TICK = -MIN_TICK;
@@ -43,7 +57,8 @@ contract UniswapV3Pool{
     function mint(address owner, 
                   int24 lowerTick, 
                   int24 upperTick, 
-                  uint128 amount) external returns (uint256 amount0, uint256 amount1){
+                  uint128 amount,
+                  bytes calldata data) external returns (uint256 amount0, uint256 amount1){
 
         if (lowerTick >= upperTick ||
             lowerTick < MIN_TICK ||
@@ -59,18 +74,8 @@ contract UniswapV3Pool{
 
         amount0 = 0.998976618347425280 ether;
         amount1 = 5000 ether;
-    }
 
-
-    function balance0() internal returns (uint256 balance) {
-        balance = IERC20(token0).balanceOf(address(this));
-    }
-
-    function balance1() internal returns (uint256 balance) {
-        balance = IERC20(token1).balanceOf(address(this));
-    }
-
-    uint256 balance0Before;
+        uint256 balance0Before;
     uint256 balance1Before;
     if (amount0 > 0) balance0Before = balance0();
     if (amount1 > 0) balance1Before = balance1();
@@ -93,4 +98,16 @@ contract UniswapV3Pool{
         amount0,
         amount1
     );
+    }
+
+
+    function balance0() internal returns (uint256 balance) {
+        balance = IERC20(token0).balanceOf(address(this));
+    }
+
+    function balance1() internal returns (uint256 balance) {
+        balance = IERC20(token1).balanceOf(address(this));
+    }
+
+    
 }

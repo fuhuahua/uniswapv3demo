@@ -16,7 +16,7 @@ library Position{
     }
 
     function update(Info storage self, uint128 liquidityDelta) internal {
-        uint128 liquidityBefore = slef.liquidity;
+        uint128 liquidityBefore = self.liquidity;
         uint128 liquidityAfter = liquidityBefore + liquidityDelta;
 
         self.liquidity = liquidityAfter;
